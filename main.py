@@ -1,3 +1,4 @@
+import json
 from tkinter import * #classes
 from tkinter import messagebox #module
 import random
@@ -39,20 +40,53 @@ def added():
     web = web_entry.get()
     email = email_entry.get()
     passw = pass_entry.get()
+    new_data = {
+        web : {
+        "email" : email,
+        "password":passw
+        }
+    }
     if len(web) == 0 or len(email) == 0 or len(passw) == 0:
         messagebox.showinfo(title="Empty Fields",message="Please Dont Leave any Field Empty.")
     else:
         ok =messagebox.askokcancel(title=web,message=f"These are the details entered :\n Email : {email}"
                                                  f"\nPassword: {passw} \nIs it ok to save?")
         if ok:
-            with open("file.txt", "a") as file:
-                file.write(f"{web} | {email} | {passw}\n")
-            web_entry.delete(0, END)
-            pass_entry.delete(0, END)
+            try:
+                with open("file.json", "r") as file:
+                    #reading from json
+                    data = json.load(file)
 
+            except FileNotFoundError:
+                with open("file.json", "w") as file:
+                    #saving the data
+                    json.dump(new_data, file, indent=4)
+            else:
+                # updating the data
+                data.update(new_data)
 
+                with open("file.json", "w") as file:
+                    #saving the data
+                    json.dump(data, file, indent=4)
+            finally:
+                web_entry.delete(0, END)
+                pass_entry.delete(0, END)
 
+# ---------------------------- FIND PASSWORD ------------------------------- #
+def searching():
+    try:
+        with open("file.json","r") as search:
+            data = json.load(search)
 
+        web_name =  web_entry.get()
+        new_Data = data[web_name]
+    except FileNotFoundError:
+        messagebox.showwarning(title="Password Searching",message="No File Found\nFirstly store the passwords.")
+    except KeyError:
+        messagebox.showwarning(title="Password Searching", message="Website's password not saved.")
+    else:
+        messagebox.showinfo(title=web_name,message=f"Email : {new_Data['email']}"
+                                                   f"\nPassword : {new_Data['password']}")
 
 # ---------------------------- UI SETUP ------------------------------- #
 
@@ -72,7 +106,7 @@ website = Label(text ="Website:")
 website.grid(column=0,row=1)
 
 #website entry field
-web_entry = Entry(width = 45)
+web_entry = Entry(width = 35)
 web_entry.grid(column=1,row=1,columnspan=2,sticky="W")
 web_entry.focus()
 
@@ -102,6 +136,9 @@ generate.grid(column = 2,row=3,sticky="W")
 add = Button(text="Add",width=38,command=added)
 add.grid(column=1,row=4,columnspan=2,sticky="W")
 
+#search button
+search = Button(text = "Search",width = 7,command = searching)
+search.grid(column=2,row=1)
 # def on_enter():
 #     add.config(bg="blue",fg="white")
 # def on_leave():
